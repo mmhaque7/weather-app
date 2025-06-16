@@ -20,41 +20,26 @@ function App() {
   const [city, setCity] = useState("");
   const [weather, setWeather] = useState<WeatherData | null>(null);
 
-  const API_KEY = import.meta.env.VITE_ACCUWEATHER_API_KEY;
-  const baseUrl = "https://dataservice.accuweather.com";
-
   const getWeather = async () => {
     if (!city) return;
 
     try {
-      // Step 1: Get location key from city name
-      const locationRes = await fetch(
-        `${baseUrl}/locations/v1/cities/search?apikey=${API_KEY}&q=${encodeURIComponent(
+      const res = await fetch(
+        `https://weather-backend-mehedi-4e2981098294.herokuapp.com/api/weather?city=${encodeURIComponent(
           city
         )}`
       );
-      const locationData = await locationRes.json();
-
-      if (!locationData.length) {
-        alert("City not found");
+      if (!res.ok) {
+        const { error } = await res.json();
+        alert(error || "Failed to get weather.");
         return;
       }
 
-      const locationKey = locationData[0].Key;
-
-      // Step 2: Get current weather for the location key
-      const weatherRes = await fetch(
-        `${baseUrl}/currentconditions/v1/${locationKey}?apikey=${API_KEY}`
-      );
-      const weatherData = await weatherRes.json();
-
-      setWeather({
-        cityName: locationData[0].LocalizedName,
-        temperature: weatherData[0].Temperature.Metric.Value,
-        description: weatherData[0].WeatherText,
-      });
+      const data = await res.json();
+      setWeather(data);
     } catch (error) {
       console.error("Error fetching weather:", error);
+      alert("Something went wrong while fetching the weather.");
     }
   };
 
